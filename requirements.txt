@@ -1,0 +1,23 @@
+# Environment & Core
+python-dotenv
+openai
+pydantic
+
+# Data Processing
+pandas
+numpy
+openpyxl
+SQLAlchemy
+PyYAML
+
+# Prediction Models
+lightgbm
+xgboost
+scikit-learn
+shap
+joblib
+
+# API Server
+fastapi
+uvicorn
+

@@ -1,0 +1,38 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Large Data & Machine Learning Models (>100MB / raw datasets)
+models_store/
+*.joblib
+*.npy
+*.pkl
+data/
+data_preprocessed/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node / Web
+node_modules/
+.next/
+dist/
+build/
+out/
+.pnpm-store/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

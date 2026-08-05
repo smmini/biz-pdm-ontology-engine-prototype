@@ -1,0 +1,21 @@
+# Feature Extraction Catalog (Ontology based)
+features:
+  Voltage:
+    - name: rolling_mean
+      window: 5
+    - name: rolling_std
+      window: 5
+  RotationSpeed:
+    - name: rolling_mean
+      window: 5
+    - name: gradient
+  Pressure:
+    - name: lag
+      periods: 1
+    - name: moving_average
+      window: 10
+  Vibration:
+    - name: rolling_mean
+      window: 5
+    - name: ema
+      span: 10
