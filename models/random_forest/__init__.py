@@ -15,7 +15,14 @@ class RandomForestModel(BasePredictionModel):
     def train(self, df: pd.DataFrame, target_col: str = "label"):
         self.feature_cols = [c for c in df.columns if c not in ("datetime", "machineID", target_col)]
         X, y = df[self.feature_cols], df[target_col]
-        self.model = RandomForestClassifier(n_estimators=200, class_weight="balanced", n_jobs=-1)
+        self.model = RandomForestClassifier(
+            n_estimators=200,
+            max_depth=12,
+            min_samples_leaf=20,
+            class_weight="balanced",
+            n_jobs=-1,
+            random_state=42,
+        )
         self.model.fit(X, y)
 
     def predict(self, df: pd.DataFrame) -> PredictionOutput:

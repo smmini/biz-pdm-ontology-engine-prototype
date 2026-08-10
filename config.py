@@ -7,6 +7,9 @@ load_dotenv()
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
 
-# API KEY가 필요한 경우 강제 체크
-# if not OPENAI_API_KEY:
-#     raise RuntimeError("OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")
+# Data directories configuration (canonical v3.1 & gen_data integration)
+CANONICAL_V3_1_DIR = os.environ.get("CANONICAL_V3_1_DIR", r"C:\kosa\project\final\predictive_maintenance_canonical_v3.1\canonical\dataset")
+GEN_DATA_OUTPUT_DIR = os.environ.get("GEN_DATA_OUTPUT_DIR", r"C:\kosa\project\final\gen_data\output")
+PROCESSED_SENSOR_DIR = os.environ.get("PROCESSED_SENSOR_DIR", r"C:\kosa\project\final\ontology_dashboard\data\sensor")
+PROCESSED_RESULT_DIR = os.environ.get("PROCESSED_RESULT_DIR", r"C:\kosa\project\final\ontology_dashboard\data\result")
+

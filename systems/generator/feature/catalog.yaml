@@ -45,4 +45,3 @@ features:
     - name: lag
       periods: 1
     - name: gradient
-

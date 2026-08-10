@@ -48,7 +48,7 @@
     "status": "confirmed"
   },
   "rotate": {
-    "target_ontology": "RotationSpeed",
+    "target_ontology": "Rotation",
     "source": "column_name",
     "confidence": 0.95,
     "status": "confirmed"
@@ -63,6 +63,72 @@
     "target_ontology": "Vibration",
     "source": "column_name",
     "confidence": 0.95,
+    "status": "confirmed"
+  },
+  "air_temperature_k": {
+    "target_ontology": "AirTemperature",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "process_temperature_k": {
+    "target_ontology": "ProcessTemperature",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "rotational_speed_rpm": {
+    "target_ontology": "RotationalSpeed",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "torque_nm": {
+    "target_ontology": "Torque",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "tool_wear_min": {
+    "target_ontology": "ToolWear",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "voltage_raw": {
+    "target_ontology": "Voltage",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "rotation_raw": {
+    "target_ontology": "Rotation",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "pressure_raw": {
+    "target_ontology": "Pressure",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "vibration_raw": {
+    "target_ontology": "Vibration",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "asset_id": {
+    "target_ontology": "Equipment",
+    "source": "column_name",
+    "confidence": 1.0,
+    "status": "confirmed"
+  },
+  "observed_at": {
+    "target_ontology": "Timestamp",
+    "source": "column_name",
+    "confidence": 1.0,
     "status": "confirmed"
   }
 }
