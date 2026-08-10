@@ -1,23 +1,25 @@
 # Environment & Core
-python-dotenv
-openai
-pydantic
+python-dotenv>=1.0.0
+openai>=1.0.0
+pydantic>=2.0.0
 
 # Data Processing
-pandas
-numpy
-openpyxl
-SQLAlchemy
-PyYAML
+pandas>=2.0.0
+numpy>=1.24.0
+openpyxl>=3.1.0
+SQLAlchemy>=2.0.0
+PyYAML>=6.0.0
 
-# Prediction Models
-lightgbm
-xgboost
-scikit-learn
-shap
-joblib
+# Machine Learning & Prediction Models
+lightgbm>=4.0.0
+xgboost>=2.0.0
+scikit-learn>=1.3.0
+shap>=0.42.0
+joblib>=1.3.0
 
-# API Server
-fastapi
-uvicorn
+# API Server & Delivery
+fastapi>=0.100.0
+uvicorn>=0.22.0
 
+# Testing
+pytest>=7.4.0
