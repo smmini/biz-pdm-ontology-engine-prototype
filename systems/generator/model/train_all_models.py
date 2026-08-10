@@ -8,7 +8,7 @@ from systems.generator.ontology_mapping.mapping_store import MappingStore
 from systems.generator.ontology_mapping.mapping_agent import map_all_sources
 from ontology.capability_detector import detect_capabilities
 from systems.generator.feature.builder import load_catalog, build_features, save_features_npy
-from prediction.label_builder import build_labels
+from systems.generator.feature.label_builder import build_labels
 from models.registry import REGISTERED_MODELS
 
 logger = logging.getLogger(__name__)

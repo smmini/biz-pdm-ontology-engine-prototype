@@ -3,7 +3,7 @@ import pandas as pd
 import shap
 from sklearn.ensemble import RandomForestClassifier
 from models.base_model import BasePredictionModel
-from prediction.output_schema import PredictionOutput
+from systems.backend.app.diagnosis.output_schema import PredictionOutput
 
 class RandomForestModel(BasePredictionModel):
     name = "random_forest"

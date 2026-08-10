@@ -1,10 +1,11 @@
 import pytest
-from report.generator import generate_report, INSPECTION_REQUEST_LIMITATIONS
+from systems.backend.app.report.generator import generate_report
+from systems.backend.app.report.constants import INSPECTION_REQUEST_LIMITATIONS
 
 
 class TestInspectionRequestReport:
     """
-    predictive_inspection_request (단일 설비 점검 요청 보고서) 전용 테스트
+    systems/backend/app/report/generator.py 직접 참조 점검 요청 보고서 전용 테스트
     """
 
     def test_inspection_request_schema(self):
@@ -15,7 +16,6 @@ class TestInspectionRequestReport:
             observed_at="2026-08-29T23:00:00+09:00"
         )
 
-        # 필수 최상위 키 존재 검증
         required_keys = [
             "schema_version", "report_type", "report_id", "generated_at",
             "generation_method", "view_scope", "subject", "status",
@@ -25,7 +25,6 @@ class TestInspectionRequestReport:
         for key in required_keys:
             assert key in report, f"필수 키 {key}가 누락되었습니다."
 
-        # 고정 상수값 검증
         assert report["schema_version"] == "report-output-v0.1"
         assert report["report_type"] == "predictive_inspection_request"
         assert report["generation_method"] == "deterministic"
@@ -33,13 +32,12 @@ class TestInspectionRequestReport:
         assert report["status"]["confirmation_status"] == "predicted_not_confirmed"
         assert report["report_id"] == "REPORT#CMP-S03-L03-01#2026-08-29T23:00:00+09:00"
 
-        # 서브 구조 검증
         assert report["subject"]["location_label"] == "03구역 / 03라인"
         assert report["subject"]["asset_type_label"] == "공기압축기"
         assert report["limitations"] == INSPECTION_REQUEST_LIMITATIONS
 
     def test_inspection_request_direction_filtering(self):
-        """top_factors 중 direction == 'risk_up'만 inspection_targets 후보에 포함되고 risk_down은 제외되는지 검증"""
+        """top_factors 중 direction == 'risk_up'만 inspection_targets 후보에 포함되는지 검증"""
         custom_factors = [
             {"feature": "rotation_raw_6h_mean", "raw_contribution": 1.2, "direction": "risk_up"},
             {"feature": "vibration_raw_6h_mean", "raw_contribution": -0.8, "direction": "risk_down"},
@@ -49,7 +47,6 @@ class TestInspectionRequestReport:
         report = generate_report("predictive_inspection_request", top_factors=custom_factors)
         targets = report["engineer_view"]["inspection_targets"]
 
-        # risk_up 2개만 추출되어 순위가 1, 2가 되어야 함
         assert len(targets) == 2
         assert targets[0]["feature"] == "rotation_raw_6h_mean"
         assert targets[0]["rank"] == 1
@@ -57,7 +54,7 @@ class TestInspectionRequestReport:
         assert targets[1]["rank"] == 2
 
     def test_inspection_request_mock_fields_are_null(self):
-        """mock/선택 필드(production_impact, estimated_downtime_minutes 등)가 임의 값 없이 None/null 인지 검증"""
+        """mock/선택 필드가 임의 값 없이 None/null 인지 검증"""
         report = generate_report("predictive_inspection_request")
         
         mock_fields = ["production_impact", "estimated_downtime_minutes", "work_order_id", "line_id"]

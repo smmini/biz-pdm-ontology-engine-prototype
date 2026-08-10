@@ -1,10 +1,10 @@
 import pytest
-from report.generator import generate_report
+from systems.backend.app.report.generator import generate_report
 
 
 class TestReportCommon:
     """
-    공통 보고서 동작 및 결정론성(Deterministic) 테스트
+    systems/backend/app/report/generator.py 직접 참조 및 공통 결정론성 테스트
     """
 
     def test_invalid_report_type_raises_value_error(self):

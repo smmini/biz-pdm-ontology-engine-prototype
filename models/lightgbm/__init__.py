@@ -4,7 +4,7 @@ import shap
 import logging
 import joblib
 from models.base_model import BasePredictionModel
-from prediction.output_schema import PredictionOutput
+from systems.backend.app.diagnosis.output_schema import PredictionOutput
 
 logger = logging.getLogger(__name__)
 

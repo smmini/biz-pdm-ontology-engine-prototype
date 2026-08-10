@@ -20,9 +20,14 @@ def predict_all(new_rows: list[dict], store_dir: str = "models_store"):
         registry_meta = json.load(f)
 
     store = MappingStore()
-    cache_path = "ontology/mapping_cache.json"
-    if not os.path.exists(cache_path):
-        raise ValueError("매핑 캐시를 찾을 수 없습니다. 먼저 학습을 진행해주세요.")
+    cache_paths = [
+        "systems/generator/ontology_mapping/mapping_cache.json",
+        "ontology/mapping_cache.json",
+        "mapping_cache.json"
+    ]
+    cache_path = next((p for p in cache_paths if os.path.exists(p)), None)
+    if not cache_path:
+        raise ValueError("매핑 캐시(mapping_cache.json)를 찾을 수 없습니다. 먼저 학습을 진행해주세요.")
         
     store.load_from_file(cache_path)   # Agent 재호출 없이 캐시만 사용
 

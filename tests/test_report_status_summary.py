@@ -1,10 +1,11 @@
 import pytest
-from report.generator import generate_report, STATUS_SUMMARY_LIMITATIONS
+from systems.backend.app.report.generator import generate_report
+from systems.backend.app.report.constants import STATUS_SUMMARY_LIMITATIONS
 
 
 class TestStatusSummaryReport:
     """
-    predictive_maintenance_status_summary (다중 설비 상태 요약 보고서) 전용 테스트
+    systems/backend/app/report/generator.py 직접 참조 다중 설비 상태 요약 보고서 전용 테스트
     """
 
     def test_status_summary_schema(self):
@@ -47,9 +48,8 @@ class TestStatusSummaryReport:
         assert counts["data_quality_hold"] == 1
         assert counts["normal"] == 1
 
-        # priority_assets 위험도(probability) 내림차순 정렬 검증
         priorities = report["priority_assets"]
         assert len(priorities) == 3
-        assert priorities[0]["asset_id"] == "CMP-S01-L01-01"  # prob 0.85
-        assert priorities[1]["asset_id"] == "CNC-S01-L01-02"  # prob 0.65
-        assert priorities[2]["asset_id"] == "CNC-S01-L01-04"  # prob 0.40
+        assert priorities[0]["asset_id"] == "CMP-S01-L01-01"
+        assert priorities[1]["asset_id"] == "CNC-S01-L01-02"
+        assert priorities[2]["asset_id"] == "CNC-S01-L01-04"
