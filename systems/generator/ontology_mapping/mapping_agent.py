@@ -3,7 +3,7 @@ import logging
 import os
 import yaml
 from systems.generator.ontology_mapping.mapping_store import MappingStore, MappingRecord
-from llm_provider.openai_client import call_llm
+from systems.generator.infrastructure.llm.openai_client import call_llm
 
 logger = logging.getLogger(__name__)
 

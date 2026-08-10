@@ -1,13 +1,12 @@
-import joblib
 import pandas as pd
+import joblib
 import shap
 from sklearn.ensemble import RandomForestClassifier
-from models.base_model import BasePredictionModel
+from systems.generator.model.base_model import BasePredictionModel
 from systems.backend.app.diagnosis.output_schema import PredictionOutput
 
 class RandomForestModel(BasePredictionModel):
     name = "random_forest"
-
     def __init__(self):
         self.model = None
         self.feature_cols = None
@@ -19,19 +18,19 @@ class RandomForestModel(BasePredictionModel):
             n_estimators=200,
             max_depth=12,
             min_samples_leaf=20,
-            class_weight="balanced",
-            n_jobs=-1,
             random_state=42,
+            class_weight="balanced",
+            n_jobs=-1
         )
         self.model.fit(X, y)
 
     def predict(self, df: pd.DataFrame) -> PredictionOutput:
-        last_row = df[self.feature_cols].iloc[[-1]]   # 마지막 1행만
+        last_row = df[self.feature_cols].iloc[[-1]]
         proba = self.model.predict_proba(last_row)[0][1]
 
         explainer = shap.TreeExplainer(self.model)
         shap_values = explainer.shap_values(last_row)
-        
+
         import numpy as np
         if isinstance(shap_values, list):
             sv = np.array(shap_values[1])[0]
@@ -42,18 +41,15 @@ class RandomForestModel(BasePredictionModel):
                 sv = shap_values[0]
         else:
             sv = np.array(shap_values)[0]
-            
+
         sv = np.array(sv).flatten()
-        shap_dict = dict(zip(self.feature_cols, [float(v) for v in sv]))
         importance = dict(zip(self.feature_cols, [float(v) for v in self.model.feature_importances_]))
 
         return PredictionOutput(
             failure_probability=float(proba),
-            failure_type="Unknown",
             confidence=float(max(proba, 1 - proba)),
-            prediction_timestamp="N/A",
-            shap=shap_dict,
             feature_importance=importance,
+            shap_values=[float(v) for v in sv]
         )
 
     def save(self, path: str):

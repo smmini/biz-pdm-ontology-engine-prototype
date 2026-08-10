@@ -13,9 +13,6 @@ class BasePredictionModel(ABC):
 
     @abstractmethod
     def predict(self, df: pd.DataFrame) -> PredictionOutput:
-        """
-        예측 결과는 반드시 PredictionOutput 스키마를 따라야 합니다.
-        """
         pass
 
     @abstractmethod

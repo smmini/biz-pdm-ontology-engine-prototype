@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 from systems.generator.ontology_mapping.mapping_store import MappingStore
 from systems.generator.feature.builder import load_catalog, build_features
-from models.registry import REGISTERED_MODELS
+from systems.generator.model.model_registry import REGISTERED_MODELS
 
 logger = logging.getLogger(__name__)
 
