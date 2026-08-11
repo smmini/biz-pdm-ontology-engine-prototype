@@ -16,42 +16,47 @@ logger = logging.getLogger(__name__)
 from collections import defaultdict
 from systems.generator.extraction.source_family import load_family_registry
 
-def _select_training_pair(sources: dict) -> tuple[str, str, str, str | None, str | None]:
+def _get_file_meta(sources_key: str, registry: dict) -> dict:
+    matched = next(
+        (fname for fname in registry if os.path.splitext(fname)[0] == sources_key), None
+    )
+    return registry.get(matched, {}) if matched else {}
+
+def _select_training_pair(sources: dict) -> tuple[str, str, dict, dict]:
     """
-    같은 family_id(동일 id/time 컬럼 스키마)에 속한 파일들 중에서만
-    telemetry_key와 failures_key를 함께 찾는다. 서로 다른 계열이 섞이지 않는다.
+    Stage 0 메타데이터의 role/id_columns를 기준으로 telemetry와 failure 파일을 짝짓는다.
+    파일명 키워드나 family_id 문자열 완전 일치는 더 이상 사용하지 않는다.
     """
     registry = load_family_registry()
-    by_family: dict[str, list[str]] = defaultdict(list)
-    for key in sources:
-        matched_filename = next(
-            (fname for fname in registry if os.path.splitext(fname)[0] == key), None
-        )
-        family_id = registry.get(matched_filename, {}).get("family_id", "unknown") if matched_filename else "unknown"
-        by_family[family_id].append(key)
 
-    for family_id, keys in by_family.items():
-        failures_keys = [k for k in keys if "failure" in k.lower()]
-        if not failures_keys:
-            continue
-        for fail_k in failures_keys:
-            prefix = fail_k.lower().split("_")[0]
-            matched_telemetry = next((k for k in keys if k != fail_k and prefix in k.lower() and any(sub in k.lower() for sub in ("telemetry", "sensor", "observation"))), None)
-            if not matched_telemetry:
-                matched_telemetry = next((k for k in keys if k != fail_k and any(sub in k.lower() for sub in ("telemetry", "sensor", "observation"))), None)
-            
-            if matched_telemetry:
-                telemetry_key = matched_telemetry
-                failures_key = fail_k
-                sample_filename = next((fname for fname in registry if os.path.splitext(fname)[0] == telemetry_key), None)
-                id_col = registry.get(sample_filename, {}).get("id_col") if sample_filename else None
-                time_col = registry.get(sample_filename, {}).get("time_col") if sample_filename else None
-                logger.info(f"[TrainAll] Selected matching family '{family_id}': telemetry='{telemetry_key}', failures='{failures_key}' (id_col='{id_col}', time_col='{time_col}')")
-                return telemetry_key, failures_key, family_id, id_col, time_col
+    telemetry_candidates = [
+        k for k in sources if _get_file_meta(k, registry).get("role") == "telemetry_sensor"
+    ]
+    failure_candidates = [
+        k for k in sources if _get_file_meta(k, registry).get("role") in ("failure_event", "evaluation_truth")
+    ]
+
+    if not telemetry_candidates:
+        raise ValueError("role='telemetry_sensor'로 판별된 파일이 없습니다. Stage 0 메타데이터를 확인해주세요.")
+    if not failure_candidates:
+        raise ValueError("role='failure_event'로 판별된 파일이 없습니다. Stage 0 메타데이터를 확인해주세요.")
+
+    for t_key in telemetry_candidates:
+        t_meta = _get_file_meta(t_key, registry)
+        t_ids = set(t_meta.get("id_columns", []))
+        for f_key in failure_candidates:
+            f_meta = _get_file_meta(f_key, registry)
+            f_ids = set(f_meta.get("id_columns", []))
+            if t_ids & f_ids:
+                logger.info(
+                    f"[TrainAll] Stage 0 메타데이터 기준 매칭 성공: telemetry='{t_key}'(role={t_meta.get('role')}), "
+                    f"failure='{f_key}'(role={f_meta.get('role')}), 공통 id_columns={t_ids & f_ids}"
+                )
+                return t_key, f_key, t_meta, f_meta
 
     raise ValueError(
-        "telemetry 데이터와 failure 라벨이 같은 계열(동일 id/time 컬럼 스키마)로 "
-        "함께 존재하는 파일 조합을 찾지 못했습니다. data/ 구성을 확인해주세요."
+        "telemetry_sensor와 failure_event 역할을 가진 파일들 중 id_columns가 겹치는 "
+        "조합을 찾지 못했습니다. Stage 0 메타데이터(source_family_registry.json)를 확인해주세요."
     )
 
 def train_all(data_dir: str = "data", store_dir: str = "models_store", force_reanalyze: bool = False):
@@ -70,16 +75,20 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
     logger.info(">>> STEP 3: CAPABILITY DETECTION")
     capabilities = detect_capabilities(store)
 
-    logger.info(">>> STEP 4: DYNAMIC FAMILY MATCHING & FEATURE EXTRACTION")
-    telemetry_key, failures_key, family_id, id_col, time_col = _select_training_pair(sources)
+    logger.info(">>> STEP 4: STAGE 0 METADATA PAIR SELECTION & FEATURE EXTRACTION")
+    telemetry_key, failures_key, telemetry_meta, failure_meta = _select_training_pair(sources)
+    family_id = telemetry_meta.get("family_id", "unknown")
+    id_col = telemetry_meta.get("id_col") or "asset_id"
+    time_col = telemetry_meta.get("time_col") or "observed_at"
+
     catalog = load_catalog()
     features = build_features(sources[telemetry_key], store, catalog)
     save_features_npy(features, "data_preprocessed/features", telemetry_key)
 
-    logger.info(">>> STEP 5: LABELING")
-    labeled = build_labels(features, sources[failures_key])
+    logger.info(">>> STEP 5: LABELING (with Stage 0 time_columns semantics)")
+    labeled = build_labels(features, sources[failures_key], failure_meta=failure_meta)
     train_positive_rate = float(labeled["label"].mean())
-    logger.info(f"Training dataset positive rate for family '{family_id}': {train_positive_rate:.4f}")
+    logger.info(f"Training dataset positive rate for telemetry='{telemetry_key}' & failure='{failures_key}': {train_positive_rate:.4f}")
 
     logger.info(">>> STEP 6: TRAIN & SAVE MODELS")
     results = {}
@@ -105,8 +114,11 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
         "trained_at": datetime.utcnow().isoformat(),
         "family_id": family_id,
         "source_telemetry_key": telemetry_key,
+        "source_failures_key": failures_key,
         "id_col": id_col,
         "time_col": time_col,
+        "telemetry_role": telemetry_meta.get("role"),
+        "failure_role": failure_meta.get("role"),
         "feature_cols": feature_cols,
         "models": results,
     }
