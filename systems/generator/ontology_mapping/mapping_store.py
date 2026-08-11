@@ -50,3 +50,26 @@ class MappingStore:
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+_singleton_instance: Optional["MappingStore"] = None
+MAPPING_CACHE_PATH = "ontology/mapping_cache.json"
+
+def get_mapping_store() -> "MappingStore":
+    """
+    프로세스 전역에서 공유되는 MappingStore 싱글톤을 반환한다.
+    최초 호출 시에만 파일에서 로드하고, 이후에는 메모리 상의 동일 인스턴스를 반환한다.
+    """
+    global _singleton_instance
+    if _singleton_instance is None:
+        _singleton_instance = MappingStore()
+        _singleton_instance.load_from_file(MAPPING_CACHE_PATH)
+    return _singleton_instance
+
+def reload_mapping_store() -> "MappingStore":
+    """캐시 파일이 외부에서 갱신된 뒤 강제로 다시 로드해야 할 때 사용."""
+    global _singleton_instance
+    _singleton_instance = MappingStore()
+    _singleton_instance.load_from_file(MAPPING_CACHE_PATH)
+    return _singleton_instance
+

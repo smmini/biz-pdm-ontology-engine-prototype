@@ -2,11 +2,36 @@ import json
 import os
 import logging
 import pandas as pd
-from systems.generator.ontology_mapping.mapping_store import MappingStore
+from systems.generator.ontology_mapping.mapping_store import get_mapping_store
 from systems.generator.feature.builder import load_catalog, build_features
 from systems.generator.model.model_registry import REGISTERED_MODELS
 
 logger = logging.getLogger(__name__)
+
+_model_cache: dict[str, tuple[float, object]] = {}  # name -> (mtime, model_instance)
+
+def _get_or_load_model(name: str, path: str):
+    if not os.path.exists(path):
+        logger.warning(f"[ModelCache] Model file path '{path}' does not exist.")
+        return None
+        
+    mtime = os.path.getmtime(path)
+    cached = _model_cache.get(name)
+    if cached and cached[0] == mtime:
+        logger.debug(f"[ModelCache] Reusing in-memory instance for model '{name}' (mtime: {mtime})")
+        return cached[1]
+    
+    cls = REGISTERED_MODELS.get(name)
+    if not cls:
+        logger.warning(f"[ModelCache] Model '{name}' is not in REGISTERED_MODELS.")
+        return None
+        
+    logger.info(f"[ModelCache] Loading model '{name}' from disk path '{path}' (mtime: {mtime})...")
+    model = cls()
+    model.load(path)
+    _model_cache[name] = (mtime, model)
+    return model
+
 
 def predict_all(new_rows: list[dict], store_dir: str = "models_store"):
     """
@@ -19,17 +44,7 @@ def predict_all(new_rows: list[dict], store_dir: str = "models_store"):
     with open(registry_path, "r", encoding="utf-8") as f:
         registry_meta = json.load(f)
 
-    store = MappingStore()
-    cache_paths = [
-        "systems/generator/ontology_mapping/mapping_cache.json",
-        "ontology/mapping_cache.json",
-        "mapping_cache.json"
-    ]
-    cache_path = next((p for p in cache_paths if os.path.exists(p)), None)
-    if not cache_path:
-        raise ValueError("매핑 캐시(mapping_cache.json)를 찾을 수 없습니다. 먼저 학습을 진행해주세요.")
-        
-    store.load_from_file(cache_path)   # Agent 재호출 없이 캐시만 사용
+    store = get_mapping_store()
 
     catalog = load_catalog()
     df = pd.DataFrame(new_rows)
@@ -42,15 +57,13 @@ def predict_all(new_rows: list[dict], store_dir: str = "models_store"):
 
     predictions = {}
     for name, meta in registry_meta["models"].items():
-        cls = REGISTERED_MODELS.get(name)
-        if not cls:
-            logger.warning(f"Model '{name}' is in registry but not registered in codebase. Skipping.")
+        model = _get_or_load_model(name, meta["path"])
+        if not model:
             continue
             
-        model = cls()
-        model.load(meta["path"])
         # 모델 예측 (가장 최근 1행만 SHAP 계산하여 반환)
         pred_output = model.predict(features)
         predictions[name] = pred_output.model_dump()
 
     return predictions
+

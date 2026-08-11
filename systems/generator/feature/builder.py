@@ -8,13 +8,27 @@ from systems.generator.ontology_mapping.mapping_store import MappingStore
 
 logger = logging.getLogger(__name__)
 
+_catalog_cache: dict[str, tuple[float, dict]] = {}
+
 def load_catalog(path: str = None) -> dict:
     if path is None:
         path = os.path.join(os.path.dirname(__file__), "catalog.yaml")
-    logger.info(f"[FeatureBuilder] Loading feature catalog from: {path}")
+        
+    if not os.path.exists(path):
+        logger.warning(f"[FeatureBuilder] Catalog path '{path}' does not exist.")
+        return {}
+
+    mtime = os.path.getmtime(path)
+    cached = _catalog_cache.get(path)
+    if cached and cached[0] == mtime:
+        logger.debug(f"[FeatureBuilder] Reusing cached catalog from: {path}")
+        return cached[1]
+
+    logger.info(f"[FeatureBuilder] Loading feature catalog from: {path} (mtime: {mtime})")
     with open(path, "r", encoding="utf-8") as f:
         catalog = yaml.safe_load(f)["features"]
         logger.info(f"[FeatureBuilder] Loaded catalog rules for nodes: {list(catalog.keys())}")
+        _catalog_cache[path] = (mtime, catalog)
         return catalog
 
 def build_features(telemetry_df: pd.DataFrame, store: MappingStore, catalog: dict) -> pd.DataFrame:

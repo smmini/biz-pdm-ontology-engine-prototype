@@ -2,12 +2,10 @@ import json
 import logging
 import os
 import yaml
-from systems.generator.ontology_mapping.mapping_store import MappingStore, MappingRecord
+from systems.generator.ontology_mapping.mapping_store import MappingStore, MappingRecord, MAPPING_CACHE_PATH, get_mapping_store
 from systems.generator.infrastructure.llm.openai_client import call_llm
 
 logger = logging.getLogger(__name__)
-
-MAPPING_CACHE_PATH = "ontology/mapping_cache.json"
 
 DEFAULT_ONTOLOGY_NODES = [
     "Voltage", "Rotation", "Pressure", "Vibration",
@@ -74,8 +72,10 @@ def map_column(column_name: str, sample_values: list, store: MappingStore) -> Ma
     store.add_mapping(record)
     return record
 
-def map_all_sources(sources: dict, store: MappingStore) -> MappingStore:
+def map_all_sources(sources: dict, store: MappingStore = None) -> MappingStore:
     logger.info("[MappingAgent] Starting agent-based mapping for all sources...")
+    if store is None:
+        store = get_mapping_store()
     
     if os.path.exists(MAPPING_CACHE_PATH):
         store.load_from_file(MAPPING_CACHE_PATH)

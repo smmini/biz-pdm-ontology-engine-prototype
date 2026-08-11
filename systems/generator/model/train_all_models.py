@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 from systems.generator.extraction.loader import load_all_sources
-from systems.generator.ontology_mapping.mapping_store import MappingStore
+from systems.generator.ontology_mapping.mapping_store import get_mapping_store, reload_mapping_store
 from systems.generator.ontology_mapping.mapping_agent import map_all_sources
 from systems.generator.ontology_mapping.capability_detector import detect_capabilities
 from systems.generator.feature.builder import load_catalog, build_features, save_features_npy
@@ -22,8 +22,9 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
     sources = load_all_sources(data_dir, force_reanalyze=force_reanalyze)
 
     logger.info(">>> STEP 2: ONTOLOGY MAPPING")
-    store = MappingStore()
+    store = get_mapping_store()
     map_all_sources(sources, store)
+    reload_mapping_store()
     
     logger.info(">>> STEP 3: CAPABILITY DETECTION")
     capabilities = detect_capabilities(store)
