@@ -2,8 +2,8 @@ import json
 import os
 import logging
 import pandas as pd
-from systems.generator.ontology_mapping.mapping_store import get_mapping_store
-from systems.generator.feature.builder import load_catalog, build_features
+from systems.generator.ontology_mapping.ontology_mapping_store import get_mapping_store
+from systems.generator.feature.feature_builder import load_catalog, build_features
 from systems.generator.model.model_registry import REGISTERED_MODELS
 
 logger = logging.getLogger(__name__)

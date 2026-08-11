@@ -3,8 +3,8 @@ import pandas as pd
 import shap
 import logging
 import joblib
-from systems.generator.model.base_model import BasePredictionModel
-from systems.backend.app.diagnosis.output_schema import PredictionOutput
+from systems.generator.model.model_base import BasePredictionModel
+from systems.backend.app.diagnosis.diagnosis_schema import PredictionOutput
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import numpy as np
 import json
 import os
 import logging
-from systems.generator.ontology_mapping.mapping_store import MappingStore
+from systems.generator.ontology_mapping.ontology_mapping_store import MappingStore
 
 logger = logging.getLogger(__name__)
 

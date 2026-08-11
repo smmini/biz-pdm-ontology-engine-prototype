@@ -1,5 +1,5 @@
 import pytest
-from systems.backend.app.report.generator import generate_report
+from systems.backend.app.report.report_generator import generate_report
 
 
 class TestReportCommon:

@@ -2,7 +2,7 @@ import re
 import logging
 from datetime import datetime
 
-from systems.backend.app.report.constants import (
+from systems.backend.app.report.report_constants import (
     ASSET_TYPE_LABELS,
     STATUS_GRADE_LABELS,
     STATUS_SENTENCES,

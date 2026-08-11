@@ -18,9 +18,9 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 # systems/ 내부 도메인 서비스 직접 import
-from systems.generator.model.train_all_models import train_all
+from systems.generator.model.model_training_service import train_all
 from systems.backend.app.diagnosis.diagnosis_service import predict_all
-from systems.backend.app.report.generator import generate_report
+from systems.backend.app.report.report_generator import generate_report
 
 app = FastAPI(title="Manufacturing Ontology Platform API (systems/ architecture)")
 

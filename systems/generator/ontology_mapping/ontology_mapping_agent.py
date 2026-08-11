@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import yaml
-from systems.generator.ontology_mapping.mapping_store import MappingStore, MappingRecord, MAPPING_CACHE_PATH, get_mapping_store
+from systems.generator.ontology_mapping.ontology_mapping_store import MappingStore, MappingRecord, MAPPING_CACHE_PATH, get_mapping_store
 from systems.generator.infrastructure.llm.openai_client import call_llm
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def load_catalog_nodes() -> list:
             logger.warning(f"[MappingAgent] Failed to load catalog.yaml for dynamic prompt: {e}")
     return nodes
 
-from systems.generator.extraction.source_family import load_family_registry
+from systems.generator.extraction.extraction_profiler import load_family_registry
 
 def build_system_prompt(nodes: list) -> str:
     nodes_str = ", ".join(nodes)

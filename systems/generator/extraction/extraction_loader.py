@@ -1,13 +1,13 @@
 import os
 import logging
-from systems.generator.extraction.extraction_planner import build_extraction_plan
-from systems.generator.extraction.extractor import extract_with_plan
+from systems.generator.extraction.extraction_agent import build_extraction_plan
+from systems.generator.extraction.extraction_transformer import extract_with_plan
 
 logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = (".csv", ".xlsx", ".xls")
 
-from systems.generator.extraction.source_family import build_family_registry
+from systems.generator.extraction.extraction_profiler import build_family_registry
 
 _last_plans: dict = {}  # 모듈 레벨, 가장 최근 load_all_sources 호출의 plan 기록
 

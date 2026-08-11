@@ -1,6 +1,6 @@
 import pytest
-from systems.backend.app.report.generator import generate_report
-from systems.backend.app.report.constants import INSPECTION_REQUEST_LIMITATIONS
+from systems.backend.app.report.report_generator import generate_report
+from systems.backend.app.report.report_constants import INSPECTION_REQUEST_LIMITATIONS
 
 
 class TestInspectionRequestReport:

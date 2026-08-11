@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from systems.backend.app.diagnosis.output_schema import PredictionOutput
+from systems.backend.app.diagnosis.diagnosis_schema import PredictionOutput
 
 class BasePredictionModel(ABC):
     """

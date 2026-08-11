@@ -1,6 +1,6 @@
 import pytest
-from systems.backend.app.report.generator import generate_report
-from systems.backend.app.report.constants import STATUS_SUMMARY_LIMITATIONS
+from systems.backend.app.report.report_generator import generate_report
+from systems.backend.app.report.report_constants import STATUS_SUMMARY_LIMITATIONS
 
 
 class TestStatusSummaryReport:

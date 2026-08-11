@@ -1,4 +1,4 @@
-from systems.generator.ontology_mapping.mapping_store import MappingStore
+from systems.generator.ontology_mapping.ontology_mapping_store import MappingStore
 
 def detect_capabilities(store: MappingStore) -> dict:
     """

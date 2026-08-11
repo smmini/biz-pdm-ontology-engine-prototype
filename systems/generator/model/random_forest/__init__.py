@@ -2,8 +2,8 @@ import pandas as pd
 import joblib
 import shap
 from sklearn.ensemble import RandomForestClassifier
-from systems.generator.model.base_model import BasePredictionModel
-from systems.backend.app.diagnosis.output_schema import PredictionOutput
+from systems.generator.model.model_base import BasePredictionModel
+from systems.backend.app.diagnosis.diagnosis_schema import PredictionOutput
 
 class RandomForestModel(BasePredictionModel):
     name = "random_forest"

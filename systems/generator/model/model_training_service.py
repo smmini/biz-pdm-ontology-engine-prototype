@@ -3,18 +3,18 @@ import json
 import logging
 from datetime import datetime
 
-from systems.generator.extraction.loader import load_all_sources
-from systems.generator.ontology_mapping.mapping_store import get_mapping_store, reload_mapping_store
-from systems.generator.ontology_mapping.mapping_agent import map_all_sources
-from systems.generator.ontology_mapping.capability_detector import detect_capabilities
-from systems.generator.feature.builder import load_catalog, build_features, save_features_npy
-from systems.generator.feature.label_builder import build_labels
+from systems.generator.extraction.extraction_loader import load_all_sources
+from systems.generator.ontology_mapping.ontology_mapping_store import get_mapping_store, reload_mapping_store
+from systems.generator.ontology_mapping.ontology_mapping_agent import map_all_sources
+from systems.generator.ontology_mapping.ontology_mapping_capability_detector import detect_capabilities
+from systems.generator.feature.feature_builder import load_catalog, build_features, save_features_npy
+from systems.generator.feature.feature_label_builder import build_labels
 from systems.generator.model.model_registry import REGISTERED_MODELS
 
 logger = logging.getLogger(__name__)
 
 from collections import defaultdict
-from systems.generator.extraction.source_family import load_family_registry
+from systems.generator.extraction.extraction_profiler import load_family_registry
 
 def _get_file_meta(sources_key: str, registry: dict) -> dict:
     matched = next(
@@ -69,8 +69,8 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
 
     # --- 부가 산출물(raw_extracted/) 저장은 메인 학습 파이프라인과 완벽히 격리 ---
     try:
-        from systems.generator.extraction.raw_extracted_writer import persist_raw_extracted
-        from systems.generator.extraction.loader import get_last_plans
+        from systems.generator.extraction.extraction_writer import persist_raw_extracted
+        from systems.generator.extraction.extraction_loader import get_last_plans
         persist_raw_extracted(sources, get_last_plans(), force_reanalyze)
     except Exception as e:
         logger.warning(f"[TrainAll] raw_extracted 저장 단계 전체 실패(학습은 계속 진행): {e}")
