@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react";
 
 interface FileItem {
-  name: str;
-  path: str;
+  name: string;
+  path: string;
   size_bytes: number;
-  size_label: str;
-  type: str;
-  preview: str | null;
-  note: str | null;
+  size_label: string;
+  type: string;
+  preview: string | null;
+  note: string | null;
   oversized_warning: boolean;
 }
 
 interface GroupFiles {
-  group_label: str;
+  group_label: string;
   files: FileItem[];
 }
 
@@ -23,7 +23,7 @@ interface LineageData {
   processed: {
     groups: GroupFiles[];
   };
-  scanned_at: str;
+  scanned_at: string;
 }
 
 export default function FilesLineagePage() {
