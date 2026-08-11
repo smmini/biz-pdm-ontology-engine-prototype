@@ -83,14 +83,17 @@ export default function Dashboard() {
         </p>
       </header>
 
-      {/* 액션 버튼 */}
-      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "24px" }}>
+      {/* 액션 버튼 그룹 */}
+      <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap", marginBottom: "24px" }}>
         <button className="btn btn-primary" onClick={runTrain} disabled={loading}>
           {loading ? "처리 중..." : "🚀 온톨로지 매핑 & 모델 전체 학습 (/api/train)"}
         </button>
         <button className="btn btn-secondary" onClick={runPredict} disabled={loading}>
           {loading ? "처리 중..." : "🔮 실시간 데이터 고장 예측 (/api/predict)"}
         </button>
+        <a href="/files" className="btn btn-accent" style={{ textDecoration: "none" }}>
+          📂 원본/가공 파일 비교 뷰어 (/files)
+        </a>
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>

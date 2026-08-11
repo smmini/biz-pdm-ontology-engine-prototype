@@ -72,20 +72,14 @@ export default function FilesLineagePage() {
             실시간 파일시스템 스캔 결과를 바탕으로 원본 데이터와 가공된 아티팩트를 비교합니다.
           </p>
         </div>
-        <button
-          onClick={fetchLineageData}
-          style={{
-            backgroundColor: "#3b82f6",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "0.375rem",
-            padding: "0.5rem 1rem",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
-        >
-          🔄 실시간 새로고침
-        </button>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <a href="/" className="btn btn-outline" style={{ textDecoration: "none", minWidth: "160px", height: "44px" }}>
+            🏠 메인 대시보드
+          </a>
+          <button onClick={fetchLineageData} className="btn btn-accent" style={{ minWidth: "160px", height: "44px" }}>
+            🔄 실시간 새로고침
+          </button>
+        </div>
       </div>
 
       {loading && (
