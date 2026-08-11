@@ -8,7 +8,7 @@ class BasePredictionModel(ABC):
     """
 
     @abstractmethod
-    def train(self, df: pd.DataFrame, target_col: str):
+    def train(self, df: pd.DataFrame, target_col: str = "label", id_col: str = None, time_col: str = None):
         pass
 
     @abstractmethod

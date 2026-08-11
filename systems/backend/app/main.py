@@ -80,12 +80,35 @@ def api_report(req: ReportRequest):
 
 @app.get("/api/sample-telemetry")
 def api_sample_telemetry(n: int = 20):
-    import pandas as pd
-    data_path = os.path.join(ROOT_DIR, "data", "PdM_telemetry.csv")
-    if not os.path.exists(data_path):
-        data_path = os.path.join(ROOT_DIR, "data", "compressor_sensor_observation.csv")
+    import pandas as pd, json
+    data_path = None
+    registry_path = os.path.join(ROOT_DIR, "models_store", "registry.json")
+    if os.path.exists(registry_path):
+        try:
+            with open(registry_path, "r", encoding="utf-8") as f:
+                reg_meta = json.load(f)
+                tele_key = reg_meta.get("source_telemetry_key")
+                if tele_key:
+                    for ext in (".csv", ".xlsx", ".xls"):
+                        cand = os.path.join(ROOT_DIR, "data", f"{tele_key}{ext}")
+                        if os.path.exists(cand):
+                            data_path = cand
+                            break
+        except Exception:
+            pass
+
+    if not data_path:
+        for fname in ("PdM_telemetry.csv", "compressor_sensor_observation.csv", "cnc_sensor_observation.csv"):
+            cand = os.path.join(ROOT_DIR, "data", fname)
+            if os.path.exists(cand):
+                data_path = cand
+                break
+
+    if not data_path or not os.path.exists(data_path):
+        raise HTTPException(status_code=404, detail="샘플 텔레메트리 데이터 파일을 찾을 수 없습니다.")
+
     try:
-        df = pd.read_csv(data_path)
+        df = pd.read_csv(data_path) if data_path.endswith(".csv") else pd.read_excel(data_path)
         sample = df.tail(n)
         return {"rows": sample.to_dict(orient="records")}
     except Exception as e:

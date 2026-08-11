@@ -7,9 +7,12 @@ logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = (".csv", ".xlsx", ".xls")
 
+from systems.generator.extraction.source_family import build_family_registry
+
 def load_all_sources(data_dir: str, force_reanalyze: bool = False) -> dict:
     """
     data_dir 내의 .csv, .xlsx, .xls 파일 각각에 대해:
+    0. build_family_registry(data_dir)로 추출 이전 동적 계열 분류 파일 생성
     1. build_extraction_plan(filepath, force_reanalyze)로 계획 수립 (캐시 활용)
     2. extract_with_plan(filepath, plan)으로 실제 추출
     3. 결과를 sources[key]에 저장
@@ -18,6 +21,7 @@ def load_all_sources(data_dir: str, force_reanalyze: bool = False) -> dict:
     if not os.path.exists(data_dir):
         raise ValueError(f"Directory missing: {data_dir}")
 
+    build_family_registry(data_dir)
     sources = {}
     for filename in sorted(os.listdir(data_dir)):
         ext = os.path.splitext(filename)[1].lower()
