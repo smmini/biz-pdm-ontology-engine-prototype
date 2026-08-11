@@ -82,7 +82,11 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
     reload_mapping_store()
     
     logger.info(">>> STEP 3: CAPABILITY DETECTION")
-    capabilities = detect_capabilities(store)
+    try:
+        capabilities = detect_capabilities(store)
+    except Exception as e:
+        logger.warning(f"[TrainAll] Capability 판별 실패(학습은 계속 진행, 빈 값으로 대체): {e}")
+        capabilities = {}
 
     logger.info(">>> STEP 4: STAGE 0 METADATA PAIR SELECTION & FEATURE EXTRACTION")
     telemetry_key, failures_key, telemetry_meta, failure_meta = _select_training_pair(sources)
@@ -92,29 +96,41 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
 
     catalog = load_catalog()
     features = build_features(sources[telemetry_key], store, catalog)
-    save_features_npy(features, "data_preprocessed/features", telemetry_key)
+    
+    try:
+        save_features_npy(features, "data_preprocessed/features", telemetry_key)
+    except Exception as e:
+        logger.warning(f"[TrainAll] Feature npy 저장 실패(학습은 계속 진행, 참고용 산출물만 없음): {e}")
 
     logger.info(">>> STEP 5: LABELING (with Stage 0 time_columns semantics)")
     labeled = build_labels(features, sources[failures_key], failure_meta=failure_meta)
     train_positive_rate = float(labeled["label"].mean())
     logger.info(f"Training dataset positive rate for telemetry='{telemetry_key}' & failure='{failures_key}': {train_positive_rate:.4f}")
 
-    logger.info(">>> STEP 6: TRAIN & SAVE MODELS")
+    logger.info(">>> STEP 6: TRAIN & SAVE MODELS (모델별 독립 실행)")
     results = {}
+    failed_models = {}
     for name, cls in REGISTERED_MODELS.items():
-        logger.info(f"Training model: {name}")
-        model = cls()
-        model.train(labeled, target_col="label", id_col=id_col, time_col=time_col)
+        try:
+            logger.info(f"Training model: {name}")
+            model = cls()
+            model.train(labeled, target_col="label", id_col=id_col, time_col=time_col)
 
-        os.makedirs(os.path.join(store_dir, name), exist_ok=True)
-        model_path = os.path.join(store_dir, name, "model.joblib")
-        model.save(model_path)
-        logger.info(f"Saved {name} to {model_path}")
+            os.makedirs(os.path.join(store_dir, name), exist_ok=True)
+            model_path = os.path.join(store_dir, name, "model.joblib")
+            model.save(model_path)
+            logger.info(f"Saved {name} to {model_path}")
 
-        results[name] = {
-            "path": model_path,
-            "train_positive_rate": train_positive_rate,
-        }
+            results[name] = {
+                "path": model_path,
+                "train_positive_rate": train_positive_rate,
+            }
+        except Exception as e:
+            logger.error(f"[TrainAll] 모델 '{name}' 학습/저장 실패, 다른 모델은 계속 진행: {e}")
+            failed_models[name] = str(e)
+
+    if not results:
+        raise ValueError(f"모든 모델 학습이 실패했습니다: {failed_models}")
 
     logger.info(">>> STEP 7: SAVE REGISTRY METADATA")
     exclude = set(filter(None, ["datetime", "observed_at", "machineID", "asset_id", "label", id_col, time_col]))
@@ -130,6 +146,7 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
         "failure_role": failure_meta.get("role"),
         "feature_cols": feature_cols,
         "models": results,
+        "failed_models": failed_models if failed_models else None,
     }
     
     os.makedirs(store_dir, exist_ok=True)
