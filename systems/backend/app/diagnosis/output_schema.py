@@ -6,5 +6,6 @@ class PredictionOutput(BaseModel):
     confidence: float
     status_grade: Optional[str] = None
     predicted_failure_type: Optional[str] = None
+    prediction_timestamp: str = ""
     feature_importance: Dict[str, float] = {}
-    shap_values: Optional[List[float]] = None
+    shap_values: Optional[Dict[str, float]] = None

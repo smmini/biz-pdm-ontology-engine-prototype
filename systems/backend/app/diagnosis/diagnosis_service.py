@@ -55,6 +55,9 @@ def predict_all(new_rows: list[dict], store_dir: str = "models_store"):
     if features.empty:
         raise ValueError(f"Feature 계산에 필요한 최소 행 수가 부족합니다 (입력 {len(df)}건). 더 많은 과거 데이터를 함께 전달해주세요.")
 
+    from datetime import datetime, timezone
+    now_iso = datetime.now(timezone.utc).isoformat()
+
     predictions = {}
     for name, meta in registry_meta["models"].items():
         model = _get_or_load_model(name, meta["path"])
@@ -63,6 +66,7 @@ def predict_all(new_rows: list[dict], store_dir: str = "models_store"):
             
         # 모델 예측 (가장 최근 1행만 SHAP 계산하여 반환)
         pred_output = model.predict(features)
+        pred_output.prediction_timestamp = now_iso
         predictions[name] = pred_output.model_dump()
 
     return predictions

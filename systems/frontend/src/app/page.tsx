@@ -4,10 +4,12 @@ import React, { useState } from "react";
 
 interface Prediction {
   failure_probability: number;
-  failure_type: string;
   confidence: number;
+  status_grade?: string;
+  predicted_failure_type?: string;
   prediction_timestamp: string;
-  shap?: Record<string, number>;
+  feature_importance?: Record<string, number>;
+  shap_values?: Record<string, number>;
 }
 
 interface TrainResult {
@@ -72,31 +74,27 @@ export default function Dashboard() {
 
   return (
     <main className="container">
-      <header style={{ marginBottom: "40px", textAlign: "center" }}>
+      <header className="header" style={{ marginBottom: "40px", textAlign: "center" }}>
         <h1 style={{ fontSize: "2.5rem", background: "linear-gradient(90deg, #58a6ff, #9b59b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-          Environment Adaptive Manufacturing Ontology Platform (v3)
+          Manufacturing Ontology Platform
         </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "1.1rem", marginTop: "12px" }}>
-          Extraction Agent(구조 판단 + 컬럼 선택)와 Model Registry가 결합된 예지보전 플랫폼입니다.
+        <p className="subtitle" style={{ color: "var(--text-muted)", fontSize: "1.1rem", marginTop: "12px" }}>
+          Agentic LLM-driven Ontology Pipeline & Predictive Maintenance Engine
         </p>
       </header>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", marginBottom: "48px" }}>
-        <div style={{ display: "flex", gap: "24px", justifyContent: "center" }}>
-          <button className="btn-primary" onClick={runTrain} disabled={loading}>
-            {loading ? <div className="spinner" /> : "🚀 1. Extraction & 전체 모델 학습 (Train All)"}
-          </button>
-          <button 
-            className="btn-primary" 
-            style={{ background: trainData ? "linear-gradient(135deg, #2ea043 0%, #3fb950 100%)" : "rgba(48,54,61,0.5)", cursor: trainData ? "pointer" : "not-allowed" }}
-            onClick={runPredict} 
-            disabled={loading || !trainData}
-          >
-            {loading ? <div className="spinner" /> : "⚡ 2. 실시간 3개 모델 예측 (Predict)"}
-          </button>
-        </div>
+      {/* 액션 버튼 */}
+      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "24px" }}>
+        <button className="btn btn-primary" onClick={runTrain} disabled={loading}>
+          {loading ? "처리 중..." : "🚀 온톨로지 매핑 & 모델 전체 학습 (/api/train)"}
+        </button>
+        <button className="btn btn-secondary" onClick={runPredict} disabled={loading}>
+          {loading ? "처리 중..." : "🔮 실시간 데이터 고장 예측 (/api/predict)"}
+        </button>
+      </div>
 
-        <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.95rem" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "var(--text-muted)", cursor: "pointer" }}>
           <input 
             type="checkbox" 
             checked={forceReanalyze} 
@@ -123,9 +121,19 @@ export default function Dashboard() {
                   <div className="metric-value" style={{ color: isDanger ? "var(--danger-color)" : "inherit" }}>
                     {(pred.failure_probability * 100).toFixed(1)}%
                   </div>
-                  <div style={{ marginTop: "16px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                  <div style={{ marginTop: "12px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
                     신뢰도: {(pred.confidence * 100).toFixed(1)}%
                   </div>
+                  {pred.predicted_failure_type && (
+                    <div style={{ marginTop: "4px", fontSize: "0.85rem", color: "#94a3b8" }}>
+                      유형: {pred.predicted_failure_type}
+                    </div>
+                  )}
+                  {pred.prediction_timestamp && (
+                    <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#64748b" }}>
+                      시각: {new Date(pred.prediction_timestamp).toLocaleTimeString("ko-KR")}
+                    </div>
+                  )}
                 </div>
               );
             })}

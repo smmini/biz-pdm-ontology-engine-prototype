@@ -36,13 +36,14 @@ class XGBoostModel(BasePredictionModel):
             sv = np.array(shap_values)[0]
 
         sv = np.array(sv).flatten()
+        shap_dict = dict(zip(self.feature_cols, [float(v) for v in sv]))
         importance = dict(zip(self.feature_cols, [float(v) for v in self.model.feature_importances_]))
 
         return PredictionOutput(
             failure_probability=float(proba),
             confidence=float(max(proba, 1 - proba)),
             feature_importance=importance,
-            shap_values=[float(v) for v in sv]
+            shap_values=shap_dict
         )
 
     def save(self, path: str):

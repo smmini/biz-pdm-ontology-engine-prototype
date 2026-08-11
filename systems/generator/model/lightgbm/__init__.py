@@ -51,7 +51,7 @@ class LightGBMModel(BasePredictionModel):
             failure_probability=float(proba),
             confidence=float(max(proba, 1 - proba)),
             feature_importance=importance,
-            shap_values=[float(v) for v in sv]
+            shap_values=shap_dict
         )
 
     def save(self, path: str):
