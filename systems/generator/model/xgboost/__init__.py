@@ -12,7 +12,7 @@ class XGBoostModel(BasePredictionModel):
         self.feature_cols = None
 
     def train(self, df: pd.DataFrame, target_col: str = "label"):
-        self.feature_cols = [c for c in df.columns if c not in ("datetime", "machineID", target_col)]
+        self.feature_cols = [c for c in df.columns if c not in ("datetime", "observed_at", "machineID", "asset_id", target_col)]
         X, y = df[self.feature_cols], df[target_col]
         self.model = xgb.XGBClassifier(eval_metric="logloss")
         self.model.fit(X, y)

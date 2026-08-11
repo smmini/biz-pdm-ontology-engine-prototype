@@ -26,6 +26,10 @@ interface LineageData {
   scanned_at: string;
 }
 
+const API_BASE = typeof window !== "undefined"
+  ? `${window.location.protocol}//${window.location.hostname}:8000`
+  : "http://localhost:8000";
+
 export default function FilesLineagePage() {
   const [data, setData] = useState<LineageData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,7 +44,7 @@ export default function FilesLineagePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/files/lineage");
+      const res = await fetch(`${API_BASE}/api/files/lineage`);
       if (!res.ok) {
         throw new Error(`API response failed with status ${res.status}`);
       }

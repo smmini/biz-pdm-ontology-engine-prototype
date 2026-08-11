@@ -21,6 +21,10 @@ interface TrainResult {
   };
 }
 
+const API_BASE = typeof window !== "undefined"
+  ? `${window.location.protocol}//${window.location.hostname}:8000`
+  : "http://localhost:8000";
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [forceReanalyze, setForceReanalyze] = useState(false);
@@ -98,9 +102,9 @@ export default function Dashboard() {
 
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
         <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "var(--text-muted)", cursor: "pointer" }}>
-          <input 
-            type="checkbox" 
-            checked={forceReanalyze} 
+          <input
+            type="checkbox"
+            checked={forceReanalyze}
             onChange={(e) => setForceReanalyze(e.target.checked)}
             style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px" }}
           />
@@ -147,7 +151,7 @@ export default function Dashboard() {
       {/* 학습 결과 메타데이터 */}
       {trainData && (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-          
+
           <section className="glass-panel">
             <h2>Model Registry (Trained Models)</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: "16px" }}>학습 시간: {new Date(trainData.registry.trained_at).toLocaleString()}</p>
@@ -214,7 +218,7 @@ export default function Dashboard() {
               ))}
             </div>
           </section>
-          
+
         </div>
       )}
     </main>

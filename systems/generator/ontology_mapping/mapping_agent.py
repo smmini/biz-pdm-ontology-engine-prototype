@@ -76,10 +76,6 @@ def map_all_sources(sources: dict, store: MappingStore = None) -> MappingStore:
     logger.info("[MappingAgent] Starting agent-based mapping for all sources...")
     if store is None:
         store = get_mapping_store()
-    
-    if os.path.exists(MAPPING_CACHE_PATH):
-        store.load_from_file(MAPPING_CACHE_PATH)
-        logger.info(f"[MappingAgent] Loaded {len(store.get_all())} existing mappings from '{MAPPING_CACHE_PATH}'.")
 
     updated = False
     for source_key, df in sources.items():

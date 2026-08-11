@@ -31,7 +31,7 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
 
     logger.info(">>> STEP 4: FEATURE EXTRACTION & NPY SAVE")
     catalog = load_catalog()
-    telemetry_key = next((k for k in sources if "telemetry" in k.lower()), list(sources.keys())[0])
+    telemetry_key = next((k for k in sources if any(sub in k.lower() for sub in ("telemetry", "sensor", "observation"))), list(sources.keys())[0])
     features = build_features(sources[telemetry_key], store, catalog)
     save_features_npy(features, "data_preprocessed/features", telemetry_key)
 

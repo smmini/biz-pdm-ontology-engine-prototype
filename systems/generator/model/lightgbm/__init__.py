@@ -15,7 +15,7 @@ class LightGBMModel(BasePredictionModel):
         self.feature_cols = None
 
     def train(self, df: pd.DataFrame, target_col: str = "label"):
-        self.feature_cols = [c for c in df.columns if c not in ("datetime", "machineID", target_col)]
+        self.feature_cols = [c for c in df.columns if c not in ("datetime", "observed_at", "machineID", "asset_id", target_col)]
         logger.info(f"[LightGBM] Starting training. Target: '{target_col}', Feature count: {len(self.feature_cols)}")
         
         X, y = df[self.feature_cols], df[target_col]
