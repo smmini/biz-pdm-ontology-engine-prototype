@@ -8,8 +8,11 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
 
 # Data directories configuration (canonical v3.1 & gen_data integration)
-CANONICAL_V3_1_DIR = os.environ.get("CANONICAL_V3_1_DIR", r"C:\kosa\project\final\predictive_maintenance_canonical_v3.1\canonical\dataset")
-GEN_DATA_OUTPUT_DIR = os.environ.get("GEN_DATA_OUTPUT_DIR", r"C:\kosa\project\final\gen_data\output")
-PROCESSED_SENSOR_DIR = os.environ.get("PROCESSED_SENSOR_DIR", r"C:\kosa\project\final\ontology_dashboard\data\sensor")
-PROCESSED_RESULT_DIR = os.environ.get("PROCESSED_RESULT_DIR", r"C:\kosa\project\final\ontology_dashboard\data\result")
-
+CANONICAL_V3_1_DIR = os.environ.get(
+    "CANONICAL_V3_1_DIR", r"..\predictive_maintenance_canonical_v3.1\canonical\dataset")
+GEN_DATA_OUTPUT_DIR = os.environ.get(
+    "GEN_DATA_OUTPUT_DIR", r"..\gen_data\output")
+PROCESSED_SENSOR_DIR = os.environ.get(
+    "PROCESSED_SENSOR_DIR", r"..\ontology_dashboard\data\sensor")
+PROCESSED_RESULT_DIR = os.environ.get(
+    "PROCESSED_RESULT_DIR", r"..\ontology_dashboard\data\result")

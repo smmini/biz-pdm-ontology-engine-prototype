@@ -30,21 +30,38 @@ def load_catalog_nodes() -> list:
             logger.warning(f"[MappingAgent] Failed to load catalog.yaml for dynamic prompt: {e}")
     return nodes
 
+from systems.generator.extraction.source_family import load_family_registry
+
 def build_system_prompt(nodes: list) -> str:
     nodes_str = ", ".join(nodes)
     return (
         "당신은 제조 데이터 온톨로지 매핑 전문가입니다.\n"
-        "주어진 컬럼명과 샘플 값을 보고, 아래 온톨로지 노드 목록 중 가장 적합한 하나를 선택하여 매핑하세요:\n"
+        "주어진 컬럼명, 파일 역할 맥락, 샘플 값을 보고 아래 온톨로지 노드 목록 중 가장 적합한 하나를 선택하여 매핑하세요:\n"
         f"{nodes_str}\n\n"
         "반드시 JSON 형식으로만 응답하세요: {\"ontology_node\": \"...\", \"confidence\": 0.0~1.0, \"reason\": \"...\"}"
     )
 
-def map_column(column_name: str, sample_values: list, store: MappingStore) -> MappingRecord:
+def map_column(column_name: str, sample_values: list, store: MappingStore, file_metadata: dict | None = None) -> MappingRecord:
     logger.info(f"[MappingAgent] Agent processing column: '{column_name}' with samples: {sample_values[:3]}")
     
     nodes = load_catalog_nodes()
-    system_prompt = build_system_prompt(nodes)
+    base_prompt = build_system_prompt(nodes)
     
+    context = ""
+    if file_metadata:
+        role = file_metadata.get("role", "unknown")
+        desc = file_metadata.get("description", "")
+        notes = file_metadata.get("column_notes", {}).get(column_name, "")
+        context = (
+            f"[파일 맥락 정보]\n"
+            f"- 파일 설명: {desc}\n"
+            f"- 파일 역할 (Role): {role}\n"
+        )
+        if notes:
+            context += f"- 컬럼 비고: {notes}\n"
+        context += "\n"
+
+    system_prompt = context + base_prompt
     prompt = f"컬럼명: {column_name}\n샘플 값: {sample_values[:5]}"
     
     try:
@@ -73,19 +90,32 @@ def map_column(column_name: str, sample_values: list, store: MappingStore) -> Ma
     return record
 
 def map_all_sources(sources: dict, store: MappingStore = None) -> MappingStore:
-    logger.info("[MappingAgent] Starting agent-based mapping for all sources...")
+    logger.info("[MappingAgent] Starting agent-based mapping for all sources (with Stage 0 file metadata context)...")
     if store is None:
         store = get_mapping_store()
 
+    family_registry = load_family_registry()
+
     updated = False
     for source_key, df in sources.items():
-        logger.info(f"[MappingAgent] Mapping source dataset: '{source_key}' ({len(df.columns)} columns)")
+        # source_key 매칭 파일 메타데이터 조회
+        matched_filename = next(
+            (fname for fname in family_registry if os.path.splitext(fname)[0] == source_key), None
+        )
+        file_meta = family_registry.get(matched_filename) if matched_filename else None
+
+        # Confidence 게이팅: status가 pending이거나 confidence < 0.7 이면 이 파일 매핑은 건너뜀
+        if file_meta and (file_meta.get("status") == "pending" or float(file_meta.get("confidence", 1.0)) < 0.7):
+            logger.warning(f"[MappingAgent] Skipping mapping for source dataset '{source_key}' because file metadata status is '{file_meta.get('status')}' (confidence={file_meta.get('confidence')}).")
+            continue
+
+        logger.info(f"[MappingAgent] Mapping source dataset: '{source_key}' ({len(df.columns)} columns) with metadata role='{file_meta.get('role') if file_meta else 'none'}'")
         for col in df.columns:
             if store.get_mapping(col) is not None:
                 continue
 
             sample = df[col].dropna().astype(str).head(5).tolist()
-            map_column(col, sample, store)
+            map_column(col, sample, store, file_metadata=file_meta)
             updated = True
     
     if updated:
