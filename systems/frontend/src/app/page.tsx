@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [forceReanalyze, setForceReanalyze] = useState(false);
   const [trainData, setTrainData] = useState<TrainResult | null>(null);
+  const [parseResult, setParseResult] = useState<any | null>(null);
   const [predictions, setPredictions] = useState<Record<string, Prediction> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +37,7 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/train", {
+      const res = await fetch(`${API_BASE}/api/train`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data_dir: "data", force_reanalyze: forceReanalyze }),
@@ -45,6 +46,26 @@ export default function Dashboard() {
       const data = await res.json();
       setTrainData(data);
       setPredictions(null);
+      setParseResult(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runParseOnly = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/parse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data_dir: "data", force_reanalyze: forceReanalyze }),
+      });
+      if (!res.ok) throw new Error("파싱 시험 API 호출 실패");
+      const data = await res.json();
+      setParseResult(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -57,11 +78,11 @@ export default function Dashboard() {
     setError(null);
     try {
       // 샘플 텔레메트리 데이터 20건 로드
-      const sampleRes = await fetch("http://localhost:8000/api/sample-telemetry?n=20");
+      const sampleRes = await fetch(`${API_BASE}/api/sample-telemetry?n=20`);
       if (!sampleRes.ok) throw new Error("샘플 데이터 로드 실패");
       const { rows } = await sampleRes.json();
 
-      const res = await fetch("http://localhost:8000/api/predict", {
+      const res = await fetch(`${API_BASE}/api/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rows }),
@@ -91,6 +112,9 @@ export default function Dashboard() {
       <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap", marginBottom: "24px" }}>
         <button className="btn btn-primary" onClick={runTrain} disabled={loading}>
           {loading ? "처리 중..." : "🚀 온톨로지 매핑 & 모델 전체 학습 (/api/train)"}
+        </button>
+        <button className="btn btn-secondary" onClick={runParseOnly} disabled={loading} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)" }}>
+          {loading ? "처리 중..." : "🔍 파싱 시험 (학습 없이 추출+매핑만)"}
         </button>
         <button className="btn btn-secondary" onClick={runPredict} disabled={loading}>
           {loading ? "처리 중..." : "🔮 실시간 데이터 고장 예측 (/api/predict)"}
@@ -219,6 +243,81 @@ export default function Dashboard() {
             </div>
           </section>
 
+        </div>
+      )}
+
+      {/* 파싱 시험 결과 전용 렌더링 섹션 */}
+      {parseResult && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "32px", marginTop: "32px" }}>
+          <section className="glass-panel" style={{ border: "1px solid rgba(88, 166, 255, 0.4)" }}>
+            <h2 style={{ color: "var(--accent-color)" }}>🔍 Parsing Test Summaries (No Training)</h2>
+            <p style={{ color: "var(--text-muted)", marginBottom: "16px" }}>
+              총 {parseResult.parsed_files?.length || 0}개 파일 추출 및 Stage 0 프로파일링 결과
+            </p>
+            <div style={{ overflowX: "auto" }}>
+              <table className="glass-table">
+                <thead>
+                  <tr>
+                    <th>파일명</th>
+                    <th>형상 (Rows x Cols)</th>
+                    <th>역할 (Role)</th>
+                    <th>신뢰도</th>
+                    <th>상태</th>
+                    <th>ID / Time 컬럼</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parseResult.parsed_files?.map((file: any, idx: number) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 600 }}>{file.filename}</td>
+                      <td>{file.shape ? `${file.shape[0]} x ${file.shape[1]}` : "-"}</td>
+                      <td><span className="badge info">{file.role}</span></td>
+                      <td>{file.confidence != null ? `${(file.confidence * 100).toFixed(0)}%` : "-"}</td>
+                      <td>
+                        <span className={`badge ${file.status === "auto_confirmed" ? "success" : "pending"}`}>
+                          {file.status || "unknown"}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                        IDs: {file.id_columns?.join(", ") || "none"}<br />
+                        Times: {file.time_columns?.map((t: any) => t.name).join(", ") || "none"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="glass-panel">
+            <h2>Parsing Mappings Result</h2>
+            <div style={{ overflowX: "auto" }}>
+              <table className="glass-table">
+                <thead>
+                  <tr>
+                    <th>원본 필드</th>
+                    <th>매핑된 온톨로지 노드</th>
+                    <th>출처</th>
+                    <th>상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.values(parseResult.mappings || {}).map((m: any, idx: number) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 600 }}>{m.source_field}</td>
+                      <td style={{ color: "var(--accent-color)" }}>{m.target_ontology}</td>
+                      <td>{m.source}</td>
+                      <td>
+                        <span className={`badge ${m.status === "confirmed" || m.status === "auto_mapped" ? "success" : "pending"}`}>
+                          {m.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
       )}
     </main>

@@ -49,6 +49,24 @@ def api_train(req: TrainRequest):
         logger.exception("Error during training pipeline")
         raise HTTPException(status_code=500, detail=str(e))
 
+class ParseRequest(BaseModel):
+    data_dir: str = "data"
+    force_reanalyze: bool = False
+
+@app.post("/api/parse")
+def api_parse(req: ParseRequest):
+    logger.info(f"[API] Parsing test request received. Target data_dir: {req.data_dir}")
+    data_path = os.path.join(ROOT_DIR, req.data_dir)
+    if not os.path.exists(data_path) or not os.listdir(data_path):
+        raise HTTPException(status_code=400, detail=f"'{data_path}' 데이터 디렉터리가 존재하지 않거나 비어 있습니다.")
+    try:
+        from systems.generator.model.model_training_service import run_parsing_only
+        result = run_parsing_only(data_dir=data_path, force_reanalyze=req.force_reanalyze)
+        return result
+    except Exception as e:
+        logger.exception("Error during parsing test")
+        raise HTTPException(status_code=500, detail=str(e))
+
 class PredictRequest(BaseModel):
     rows: list[dict]
 

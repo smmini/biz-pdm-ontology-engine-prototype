@@ -172,3 +172,58 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
         }, 
         "registry": registry_meta
     }
+
+def run_parsing_only(data_dir: str = "data", force_reanalyze: bool = False) -> dict:
+    """
+    학습 파이프라인과 완전히 분리된 파싱 시험 전용 함수.
+    STEP 1(추출, Stage 0 프로파일링) + STEP 2(매핑)까지만 수행하고
+    모델 학습이나 어떤 영구 산출물(features, models_store)도 만들지 않는다.
+    """
+    logger.info("========================================")
+    logger.info(f"🔍 PARSING TEST ONLY (no training): data_dir='{data_dir}', force_reanalyze={force_reanalyze}")
+    logger.info("========================================")
+
+    sources = load_all_sources(data_dir, force_reanalyze=force_reanalyze)
+
+    # 참고용 산출물(raw_extracted) 저장 시도 (독립적 격리)
+    try:
+        from systems.generator.extraction.extraction_writer import persist_raw_extracted
+        from systems.generator.extraction.extraction_loader import get_last_plans
+        persist_raw_extracted(sources, get_last_plans(), force_reanalyze)
+    except Exception as e:
+        logger.warning(f"[RunParsingOnly] raw_extracted 저장 단계 예외(파싱 시험은 계속 진행): {e}")
+
+    store = get_mapping_store()
+    map_all_sources(sources, store)
+    reload_mapping_store()
+
+    family_registry = load_family_registry()
+
+    # 사람이 바로 확인 가능한 형태로 정리
+    file_summaries = []
+    for key, df in sources.items():
+        matched_filename = next((f for f in family_registry if os.path.splitext(f)[0] == key), None)
+        meta = family_registry.get(matched_filename, {}) if matched_filename else {}
+        file_summaries.append({
+            "filename": matched_filename or key,
+            "shape": list(df.shape),
+            "columns": list(df.columns),
+            "role": meta.get("role", "unknown"),
+            "confidence": meta.get("confidence"),
+            "status": meta.get("status"),
+            "id_columns": meta.get("id_columns", []),
+            "time_columns": meta.get("time_columns", []),
+        })
+
+    return {
+        "parsed_files": file_summaries,
+        "mappings": {
+            k: {
+                "source_field": v.source_field,
+                "target_ontology": v.target_ontology,
+                "source": v.source,
+                "confidence": v.confidence,
+                "status": v.status,
+            } for k, v in store.get_all().items()
+        },
+    }
