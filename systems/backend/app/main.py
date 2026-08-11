@@ -88,8 +88,11 @@ class ReportRequest(BaseModel):
 def api_report(req: ReportRequest):
     logger.info(f"[API] Report request received for type: {req.report_type}")
     try:
-        report_output = generate_report(req.report_type, **req.params)
-        return report_output
+        from systems.backend.app.report.report_file_writer import generate_and_save_report
+        saved_path = generate_and_save_report(req.report_type, internal_data=req.params)
+        with open(saved_path, "r", encoding="utf-8") as f:
+            report_output = json.load(f)
+        return {**report_output, "_saved_path": saved_path}
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
