@@ -10,6 +10,7 @@ models_store/
 *.pkl
 data/
 data_preprocessed/
+ontology/
 
 # Python
 __pycache__/
