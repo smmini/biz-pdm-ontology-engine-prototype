@@ -67,6 +67,15 @@ def train_all(data_dir: str = "data", store_dir: str = "models_store", force_rea
     logger.info(">>> STEP 1: PARSE & EXTRACT SOURCES (Extraction Agent)")
     sources = load_all_sources(data_dir, force_reanalyze=force_reanalyze)
 
+    # --- 부가 산출물(raw_extracted/) 저장은 메인 학습 파이프라인과 완벽히 격리 ---
+    try:
+        from systems.generator.extraction.raw_extracted_writer import persist_raw_extracted
+        from systems.generator.extraction.loader import get_last_plans
+        persist_raw_extracted(sources, get_last_plans(), force_reanalyze)
+    except Exception as e:
+        logger.warning(f"[TrainAll] raw_extracted 저장 단계 전체 실패(학습은 계속 진행): {e}")
+    # --- 부가 산출물 저장 끝 ---
+
     logger.info(">>> STEP 2: ONTOLOGY MAPPING")
     store = get_mapping_store()
     map_all_sources(sources, store)

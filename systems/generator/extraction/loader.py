@@ -9,6 +9,8 @@ SUPPORTED_EXTENSIONS = (".csv", ".xlsx", ".xls")
 
 from systems.generator.extraction.source_family import build_family_registry
 
+_last_plans: dict = {}  # 모듈 레벨, 가장 최근 load_all_sources 호출의 plan 기록
+
 def load_all_sources(data_dir: str, force_reanalyze: bool = False) -> dict:
     """
     data_dir 내의 .csv, .xlsx, .xls 파일 각각에 대해:
@@ -17,12 +19,14 @@ def load_all_sources(data_dir: str, force_reanalyze: bool = False) -> dict:
     2. extract_with_plan(filepath, plan)으로 실제 추출
     3. 결과를 sources[key]에 저장
     """
+    global _last_plans
     logger.info(f"[Loader] Loading all sources from data_dir: '{data_dir}' (force_reanalyze={force_reanalyze})")
     if not os.path.exists(data_dir):
         raise ValueError(f"Directory missing: {data_dir}")
 
     build_family_registry(data_dir)
     sources = {}
+    plans = {}
     for filename in sorted(os.listdir(data_dir)):
         ext = os.path.splitext(filename)[1].lower()
         if ext in SUPPORTED_EXTENSIONS:
@@ -33,6 +37,12 @@ def load_all_sources(data_dir: str, force_reanalyze: bool = False) -> dict:
             plan = build_extraction_plan(filepath, force_reanalyze=force_reanalyze)
             df = extract_with_plan(filepath, plan)
             sources[key] = df
+            plans[key] = plan
 
+    _last_plans = plans
     logger.info(f"[Loader] Successfully loaded {len(sources)} source datasets from '{data_dir}'.")
     return sources
+
+def get_last_plans() -> dict:
+    """가장 최근 load_all_sources() 호출에서 만들어진 plan 정보 조회."""
+    return _last_plans
