@@ -3,14 +3,9 @@ import json
 import logging
 from datetime import datetime, timezone
 from systems.generator.infrastructure.llm.openai_client import call_llm
-from dotenv import load_dotenv, find_dotenv
+from systems.backend.backend_config import load_config
 
 logger = logging.getLogger(__name__)
-
-def _load_env_safely():
-    env_file = find_dotenv(usecwd=True)
-    if env_file:
-        load_dotenv(env_file)
 
 REPORT_INPUT_MAPPING_PATH = "data_preprocessed/report_input_mapping.json"
 
@@ -41,7 +36,7 @@ def build_report_input_mapping(force_reanalyze: bool = False) -> dict:
     입력 필드에 대응하는지 매핑 파일을 만든다. 이미 파일이 있으면 재생성하지 않는다
     (한 번만 판단하고 이후엔 정적으로 재사용).
     """
-    _load_env_safely()
+    load_config()
     if os.path.exists(REPORT_INPUT_MAPPING_PATH) and not force_reanalyze:
         logger.info(f"[ReportInputMapper] 캐시 존재, 재생성 생략: '{REPORT_INPUT_MAPPING_PATH}'")
         with open(REPORT_INPUT_MAPPING_PATH, "r", encoding="utf-8") as f:

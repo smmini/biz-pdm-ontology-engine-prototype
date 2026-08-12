@@ -4,25 +4,9 @@ import logging
 from openai import OpenAI
 from dotenv import load_dotenv, find_dotenv
 
+from systems.generator.generator_config import load_config
+
 logger = logging.getLogger(__name__)
-
-_config_loaded = False
-
-def load_config():
-    global _config_loaded
-    if not _config_loaded:
-        env_file = find_dotenv(usecwd=True)
-        if env_file:
-            load_dotenv(env_file)
-        else:
-            cur = os.path.abspath(__file__)
-            for _ in range(6):
-                cur = os.path.dirname(cur)
-                target = os.path.join(cur, ".env")
-                if os.path.exists(target):
-                    load_dotenv(target)
-                    break
-        _config_loaded = True
 
 def call_llm(prompt: str, system: str = "You are a helpful assistant.") -> str:
     load_config()

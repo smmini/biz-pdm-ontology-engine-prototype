@@ -17,6 +17,9 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.pa
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
+from systems.backend.backend_config import load_config
+load_config()
+
 # systems/ 내부 도메인 서비스 직접 import
 from systems.generator.model.model_training_service import train_all
 from systems.backend.app.diagnosis.diagnosis_service import predict_all
