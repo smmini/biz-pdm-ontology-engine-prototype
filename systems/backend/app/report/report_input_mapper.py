@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from datetime import datetime, timezone
-from systems.generator.infrastructure.llm.openai_client import call_llm
+from systems.generator.generator_llm_client import call_llm
 from systems.backend.backend_config import load_config
 
 logger = logging.getLogger(__name__)
