@@ -3,7 +3,7 @@ import logging
 import os
 import yaml
 from systems.generator.ontology_mapping.ontology_mapping_store import MappingStore, MappingRecord, MAPPING_CACHE_PATH, get_mapping_store
-from systems.generator.infrastructure.llm.openai_client import call_llm
+from systems.generator.generator_llm_client import call_llm
 
 logger = logging.getLogger(__name__)
 

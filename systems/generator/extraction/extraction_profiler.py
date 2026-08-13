@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime, timezone
 import pandas as pd
-from systems.generator.infrastructure.llm.openai_client import call_llm
+from systems.generator.generator_llm_client import call_llm
 
 logger = logging.getLogger(__name__)
 

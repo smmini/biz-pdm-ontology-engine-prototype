@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -95,7 +96,7 @@ def api_report(req: ReportRequest):
         saved_path = generate_and_save_report(req.report_type, internal_data=req.params)
         with open(saved_path, "r", encoding="utf-8") as f:
             report_output = json.load(f)
-        return {**report_output, "_saved_path": saved_path}
+        return {**report_output, "saved_path": saved_path, "_saved_path": saved_path}
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
